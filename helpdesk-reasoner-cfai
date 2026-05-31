@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Helpdesk Reasoner — AI Complaint Analysis System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#080808;
+  --paper:#f4f4ef;
+  --paper-dark:#ebebе5;
+  --rule:#d4d4cc;
+  --rule-heavy:#2a2a25;
+  --muted:#828278;
+  --dim:#b4b4ac;
+  --lift:#e0e0d8;
+  --mono:'DM Mono',monospace;
+  --serif:'Playfair Display',serif;
+  --sans:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weight:300;line-height:1.65;overflow-x:hidden}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════ */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--paper)}
+::-webkit-scrollbar-thumb{background:var(--dim)}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+header{
+  position:sticky;top:0;z-index:200;
+  background:var(--paper);
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4rem;height:68px;
+}
+.logo{
+  font-family:var(--mono);font-size:0.75rem;font-weight:500;
+  letter-spacing:0.16em;text-transform:uppercase;
+  display:flex;align-items:center;gap:0.6rem;
+}
+.logo-dot{width:7px;height:7px;background:var(--ink);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+nav{display:flex;align-items:center;gap:2.5rem}
+nav a{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s}
+nav a:hover{color:var(--ink)}
+.nav-cta{
+  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;
+  background:var(--ink);color:var(--paper);border:none;
+  padding:0.55rem 1.2rem;cursor:pointer;transition:background 0.15s;font-weight:500;
+}
+.nav-cta:hover{background:var(--rule-heavy)}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero{
+  padding:7rem 4rem 5rem;
+  border-bottom:1px solid var(--rule);
+  display:grid;grid-template-columns:3fr 2fr;gap:5rem;align-items:center;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;right:-10rem;top:-10rem;
+  width:40rem;height:40rem;
+  border-radius:50%;border:1px solid var(--rule);opacity:0.5;
+  pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;right:-6rem;top:-6rem;
+  width:30rem;height:30rem;
+  border-radius:50%;border:1px solid var(--rule);opacity:0.3;
+  pointer-events:none;
+}
+.hero-tag{
+  font-family:var(--mono);font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:1.8rem;
+  display:flex;align-items:center;gap:0.8rem;
+}
+.hero-tag::before{content:'';width:2rem;height:1px;background:var(--muted)}
+.hero h1{
+  font-family:var(--serif);font-size:clamp(3rem,5.5vw,5.5rem);
+  font-weight:900;line-height:1.02;letter-spacing:-0.025em;
+  margin-bottom:2rem;
+}
+.hero h1 em{font-style:italic;color:var(--muted)}
+.hero-desc{
+  font-size:1.05rem;color:var(--muted);line-height:1.8;
+  max-width:42ch;margin-bottom:2.5rem;
+}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap}
+.btn{
+  font-family:var(--mono);font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;
+  padding:0.9rem 2rem;border:none;cursor:pointer;transition:all 0.15s;font-weight:500;
+}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:var(--rule-heavy)}
+.btn-primary:disabled{background:var(--dim);cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--ink);border:1px solid var(--rule-heavy)}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--rule)}
+.btn-ghost:hover{background:var(--lift)}
+
+.hero-right{display:flex;flex-direction:column;gap:0.85rem}
+.metric-card{
+  border:1px solid var(--rule);padding:1.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:border-color 0.2s;
+}
+.metric-card:hover{border-color:var(--ink)}
+.metric-val{font-family:var(--serif);font-size:2.2rem;font-weight:700;line-height:1}
+.metric-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.3rem}
+.metric-icon{font-size:1.5rem;opacity:0.25}
+
+/* ═══════════════════════════════════════════
+   TECH STRIP
+═══════════════════════════════════════════ */
+.tech-strip{
+  border-bottom:1px solid var(--rule);
+  padding:1.2rem 4rem;
+  display:flex;align-items:center;gap:3rem;overflow:hidden;
+}
+.tech-item{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--dim);white-space:nowrap;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.tech-item::before{content:'◆';font-size:0.4rem;color:var(--dim)}
+
+/* ═══════════════════════════════════════════
+   HOW IT WORKS SECTION
+═══════════════════════════════════════════ */
+.section{padding:5rem 4rem;border-bottom:1px solid var(--rule)}
+.section-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:3.5rem;
+}
+.section-tag{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:0.75rem;
+}
+.section-title{font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.8rem);font-weight:700;line-height:1.15;letter-spacing:-0.01em}
+.section-title em{font-style:italic;color:var(--muted)}
+.section-subtitle{font-size:0.9rem;color:var(--muted);max-width:30ch;text-align:right;line-height:1.7}
+
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--rule)}
+.pipe-step{
+  padding:2rem;border-right:1px solid var(--rule);position:relative;
+  transition:background 0.2s;
+}
+.pipe-step:last-child{border-right:none}
+.pipe-step:hover{background:var(--lift)}
+.pipe-arrow{
+  position:absolute;right:-1px;top:50%;transform:translateY(-50%);
+  width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;
+  border-left:8px solid var(--rule);z-index:1;
+}
+.pipe-step:last-child .pipe-arrow{display:none}
+.pipe-num{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;color:var(--muted);
+  margin-bottom:1rem;
+}
+.pipe-name{font-family:var(--serif);font-size:1.3rem;font-weight:700;margin-bottom:0.6rem}
+.pipe-desc{font-size:0.82rem;color:var(--muted);line-height:1.65}
+.pipe-tech{
+  margin-top:1rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--dim);
+  border-top:1px solid var(--rule);padding-top:0.75rem;
+}
+
+/* Categories grid */
+.categories-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.cat-card{
+  background:var(--paper);padding:1.8rem 1.5rem;
+  transition:background 0.2s;cursor:default;
+}
+.cat-card:hover{background:var(--lift)}
+.cat-card-icon{font-size:1.6rem;margin-bottom:0.75rem}
+.cat-card-name{font-family:var(--serif);font-size:1.1rem;font-weight:700;margin-bottom:0.4rem}
+.cat-card-priority{
+  display:inline-block;font-family:var(--mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.2rem 0.5rem;margin-bottom:0.75rem;
+}
+.priority-HIGH{background:var(--ink);color:var(--paper)}
+.priority-MEDIUM{background:var(--muted);color:var(--paper)}
+.priority-LOW{background:var(--lift);color:var(--muted);border:1px solid var(--rule)}
+.cat-card-sla{font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-bottom:0.75rem}
+.cat-card-kws{font-size:0.75rem;color:var(--dim);line-height:1.6}
+
+/* ═══════════════════════════════════════════
+   ANALYSER SECTION (MAIN TOOL)
+═══════════════════════════════════════════ */
+#analyser{padding:0;border-bottom:1px solid var(--rule)}
+.analyser-header{
+  padding:3rem 4rem 2rem;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.analyser-title-group{}
+.analyser-actions{display:flex;gap:0.75rem}
+
+.analyser-body{display:grid;grid-template-columns:1fr 1fr;min-height:700px}
+.panel-l{
+  padding:2.5rem;border-right:1px solid var(--rule);
+  display:flex;flex-direction:column;gap:1.5rem;
+}
+.panel-r{
+  padding:2.5rem;display:flex;flex-direction:column;gap:1.5rem;min-height:700px;
+}
+
+.panel-label{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--muted);display:flex;align-items:center;gap:0.75rem;
+}
+.panel-label::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+textarea{
+  width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:0;
+  padding:1.75rem;font-family:var(--mono);font-size:0.9rem;line-height:1.75;
+  resize:none;height:220px;outline:none;caret-color:var(--paper);
+  transition:box-shadow 0.2s;
+}
+textarea::placeholder{color:#555550}
+textarea:focus{box-shadow:0 0 0 1px var(--muted)}
+
+.word-counter{
+  font-family:var(--mono);font-size:0.68rem;color:var(--muted);
+  text-align:right;margin-top:-0.75rem;
+}
+
+.samples-label{
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:0.6rem;
+}
+.samples-grid{display:flex;flex-direction:column;gap:0.4rem}
+.sample-chip{
+  font-size:0.82rem;color:var(--rule-heavy);padding:0.65rem 0.9rem;
+  border:1px solid var(--rule);cursor:pointer;transition:all 0.15s;line-height:1.4;
+  display:flex;align-items:flex-start;gap:0.6rem;
+}
+.sample-chip:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sample-cat{
+  font-family:var(--mono);font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;margin-top:0.15rem;min-width:4.5rem;
+}
+.sample-chip:hover .sample-cat{color:var(--dim)}
+
+/* empty / loading / result states */
+.state-empty,.state-loading{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:1.25rem;color:var(--dim);
+}
+.empty-glyph{
+  font-family:var(--serif);font-size:5rem;font-weight:700;line-height:1;
+  color:var(--rule);letter-spacing:-0.05em;
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.empty-label{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+
+.spinner{
+  width:36px;height:36px;border:2px solid var(--rule);border-top-color:var(--ink);
+  border-radius:50%;animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-label{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)}
+.loading-steps{
+  font-family:var(--mono);font-size:0.65rem;color:var(--dim);
+  display:flex;flex-direction:column;gap:0.3rem;
+}
+
+/* result card */
+.result{display:flex;flex-direction:column;gap:1.25rem}
+
+.r-category{
+  background:var(--ink);color:var(--paper);padding:1.75rem;
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.r-cat-left{}
+.r-cat-eyebrow{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;opacity:0.5;margin-bottom:0.4rem}
+.r-cat-name{font-family:var(--serif);font-size:1.9rem;font-weight:700;line-height:1.1}
+.r-cat-sla{font-family:var(--mono);font-size:0.72rem;opacity:0.5;margin-top:0.5rem}
+.r-cat-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem}
+.r-priority{
+  font-family:var(--mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.3rem 0.75rem;border:1px solid rgba(255,255,255,0.3);font-weight:500;
+}
+.r-cf-big{font-family:var(--serif);font-size:2.5rem;font-weight:700;line-height:1}
+.r-cf-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;opacity:0.5;text-align:right}
+
+.r-block{border:1px solid var(--rule);overflow:hidden}
+.r-block-head{
+  background:var(--lift);padding:0.7rem 1.2rem;
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.r-block-body{padding:1.2rem}
+
+/* cf score bars */
+.cf-rows{display:flex;flex-direction:column;gap:0.65rem}
+.cf-row{display:grid;grid-template-columns:9.5rem 1fr 3.2rem;align-items:center;gap:0.75rem}
+.cf-name{font-size:0.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cf-name.winner{color:var(--ink);font-weight:600}
+.cf-track{height:4px;background:var(--rule);position:relative;overflow:hidden}
+.cf-fill{height:100%;background:var(--dim);transition:width 0.7s cubic-bezier(0.4,0,0.2,1);position:absolute;left:0;top:0;width:0}
+.cf-fill.winner{background:var(--ink)}
+.cf-num{font-family:var(--mono);font-size:0.68rem;color:var(--dim);text-align:right}
+.cf-num.winner{color:var(--ink)}
+
+/* meta 2-col */
+.r-meta{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.r-meta-item{border:1px solid var(--rule);padding:0.9rem 1rem}
+.r-meta-key{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.25rem}
+.r-meta-val{font-size:0.85rem;font-weight:500;line-height:1.35}
+
+/* keywords cloud */
+.kw-cloud{display:flex;flex-wrap:wrap;gap:0.4rem;padding:1rem 1.2rem}
+.kw-tag{
+  font-family:var(--mono);font-size:0.68rem;letter-spacing:0.05em;
+  padding:0.25rem 0.55rem;background:var(--lift);border:1px solid var(--rule);color:var(--rule-heavy);
+}
+
+/* reasoning chain */
+.chain-steps{display:flex;flex-direction:column;padding:1.2rem;gap:0}
+.chain-step{
+  display:grid;grid-template-columns:2rem 1fr;gap:0.75rem;
+  padding:0.65rem 0;border-bottom:1px solid var(--rule);
+}
+.chain-step:last-child{border-bottom:none;padding-bottom:0}
+.chain-step:first-child{padding-top:0}
+.chain-n{font-family:var(--mono);font-size:0.62rem;color:var(--dim);margin-top:0.2rem}
+.chain-t{font-size:0.82rem;color:var(--rule-heavy);line-height:1.55}
+
+/* resolution steps */
+.res-list{list-style:none;display:flex;flex-direction:column;gap:0;padding:1.2rem}
+.res-item{
+  display:flex;gap:0.75rem;padding:0.7rem 0;
+  border-bottom:1px solid var(--rule);
+}
+.res-item:last-child{border-bottom:none;padding-bottom:0}
+.res-item:first-child{padding-top:0}
+.res-arrow{color:var(--dim);font-family:var(--mono);font-size:0.8rem;flex-shrink:0;margin-top:0.08rem}
+.res-text{font-size:0.83rem;color:var(--rule-heavy);line-height:1.55}
+
+/* escalation */
+.r-escalation{padding:1.25rem 1.5rem;border:2px solid var(--ink);background:var(--ink);color:var(--paper)}
+.r-esc-head{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;opacity:0.5;margin-bottom:0.5rem}
+.r-esc-body{font-size:0.88rem;line-height:1.6}
+.r-esc-body strong{font-weight:600}
+.r-resolved{padding:1rem 1.25rem;border:1px solid var(--rule);font-family:var(--mono);font-size:0.72rem;letter-spacing:0.06em;color:var(--muted)}
+
+/* ═══════════════════════════════════════════
+   HISTORY TABLE
+═══════════════════════════════════════════ */
+#history-section{display:none;padding:5rem 4rem;border-bottom:1px solid var(--rule)}
+#history-section.visible{display:block}
+.history-table{width:100%;border-collapse:collapse;border:1px solid var(--rule)}
+.history-table th{
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);padding:0.9rem 1.1rem;text-align:left;
+  border-bottom:1px solid var(--rule);background:var(--lift);
+  border-right:1px solid var(--rule);
+}
+.history-table th:last-child{border-right:none}
+.history-table td{
+  padding:0.85rem 1.1rem;font-size:0.82rem;border-bottom:1px solid var(--rule);
+  border-right:1px solid var(--rule);vertical-align:top;
+}
+.history-table td:last-child{border-right:none}
+.history-table tr:last-child td{border-bottom:none}
+.history-table tr:hover td{background:var(--lift)}
+.h-complaint{color:var(--rule-heavy);max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h-category{font-weight:500}
+.h-cf{font-family:var(--mono);font-size:0.78rem}
+.h-pri{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.2rem 0.5rem;display:inline-block}
+.h-esc{font-family:var(--mono);font-size:0.72rem;color:var(--muted)}
+.h-esc.yes{color:var(--ink);font-weight:600}
+.h-time{font-family:var(--mono);font-size:0.68rem;color:var(--dim)}
+
+/* ═══════════════════════════════════════════
+   STATS SECTION
+═══════════════════════════════════════════ */
+#stats-section{display:none;padding:5rem 4rem;border-bottom:1px solid var(--rule)}
+#stats-section.visible{display:block}
+.stats-top{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:3rem}
+.stat-tile{
+  background:var(--paper);padding:2rem 1.5rem;
+  transition:background 0.2s;
+}
+.stat-tile:hover{background:var(--lift)}
+.st-num{font-family:var(--serif);font-size:2.8rem;font-weight:700;line-height:1;margin-bottom:0.3rem}
+.st-label{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+
+.stats-bottom{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+
+/* donut-style chart replacement: horizontal bars */
+.priority-bars{display:flex;flex-direction:column;gap:1rem}
+.pb-row{display:flex;align-items:center;gap:1rem}
+.pb-label{font-family:var(--mono);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;width:5rem;color:var(--muted)}
+.pb-track{flex:1;height:8px;background:var(--rule);position:relative}
+.pb-fill{height:100%;background:var(--ink);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);width:0}
+.pb-fill.med{background:var(--muted)}
+.pb-fill.low{background:var(--dim)}
+.pb-count{font-family:var(--mono);font-size:0.72rem;color:var(--muted);width:1.5rem;text-align:right}
+
+.cat-stats-list{display:flex;flex-direction:column;gap:0.5rem}
+.cs-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.7rem 1rem;border:1px solid var(--rule);
+  transition:background 0.15s;
+}
+.cs-row:hover{background:var(--lift)}
+.cs-name{font-size:0.85rem}
+.cs-count{font-family:var(--mono);font-size:0.72rem;color:var(--muted)}
+
+/* ═══════════════════════════════════════════
+   ABOUT SECTION
+═══════════════════════════════════════════ */
+.about-section{padding:5rem 4rem;border-bottom:1px solid var(--rule)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3rem}
+.about-col{}
+.about-col-title{font-family:var(--serif);font-size:1.3rem;font-weight:700;margin-bottom:1rem}
+.about-col p{font-size:0.88rem;color:var(--muted);line-height:1.8;margin-bottom:0.75rem}
+.formula-box{
+  margin-top:1.25rem;background:var(--ink);color:var(--paper);
+  padding:1.25rem;font-family:var(--mono);font-size:0.82rem;line-height:1.7;
+}
+.formula-comment{color:#888}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  border-top:1px solid var(--rule);padding:2.5rem 4rem;
+  display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;
+  gap:2rem;
+}
+.footer-brand{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase}
+.footer-brand span{display:block;color:var(--muted);font-size:0.65rem;margin-top:0.3rem;font-weight:300}
+.footer-links{display:flex;justify-content:center;gap:2rem}
+.footer-links a{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.footer-links a:hover{color:var(--ink)}
+.footer-meta{font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:right;line-height:1.7}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:1100px){
+  .pipeline{grid-template-columns:1fr 1fr}
+  .pipe-step:nth-child(2){border-right:none}
+  .pipe-step:nth-child(3){border-right:1px solid var(--rule)}
+  .categories-grid{grid-template-columns:1fr 1fr}
+  .stats-top{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:900px){
+  header{padding:0 1.5rem}
+  nav{display:none}
+  .hero{grid-template-columns:1fr;padding:4rem 1.5rem 3rem;gap:3rem}
+  .hero-right{display:none}
+  .tech-strip{padding:1.2rem 1.5rem;gap:1.5rem}
+  .section,.about-section,#stats-section,#history-section{padding:3.5rem 1.5rem}
+  .section-header{flex-direction:column;align-items:flex-start;gap:0.5rem}
+  .section-subtitle{text-align:left}
+  .pipeline{grid-template-columns:1fr}
+  .pipe-step{border-right:none;border-bottom:1px solid var(--rule)}
+  .pipe-step:last-child{border-bottom:none}
+  .pipe-arrow{display:none}
+  .categories-grid{grid-template-columns:1fr}
+  .analyser-header{padding:2rem 1.5rem 1.5rem;flex-direction:column;align-items:flex-start;gap:1rem}
+  .analyser-body{grid-template-columns:1fr}
+  .panel-l{border-right:none;border-bottom:1px solid var(--rule);padding:1.75rem 1.5rem}
+  .panel-r{padding:1.75rem 1.5rem}
+  .about-grid{grid-template-columns:1fr}
+  .stats-top{grid-template-columns:1fr 1fr}
+  .stats-bottom{grid-template-columns:1fr}
+  footer{grid-template-columns:1fr;gap:1.5rem}
+  .footer-links{justify-content:flex-start}
+  .footer-meta{text-align:left}
+  .cf-row{grid-template-columns:7rem 1fr 2.8rem}
+  .r-meta{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <div class="logo"><div class="logo-dot"></div>Helpdesk Reasoner</div>
+  <nav>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#analyser">Analyser</a>
+    <a href="#history-section">History</a>
+    <a href="#stats-section">Statistics</a>
+    <a href="#about">About</a>
+  </nav>
+  <button class="nav-cta" onclick="scrollToAnalyser()">Try It Now →</button>
+</header>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="hero-left">
+    <h1>Intelligent<br><em>Automated</em><br>Helpdesk<br>Reasoner</h1>
+    <p class="hero-desc">An explainable AI system that classifies customer complaints, assigns priority, reasons through resolution steps, and determines escalation — powered by NLP and MYCIN-style Certainty Factor logic.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="scrollToAnalyser()">Analyse a Complaint</button>
+      <button class="btn btn-outline" onclick="runAllDemo()">Run Full Demo</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('how-it-works').scrollIntoView({behavior:'smooth'})">Learn How →</button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="metric-card">
+      <div><div class="metric-val">6</div><div class="metric-label">Issue Categories</div></div>
+      <div class="metric-icon">🗂</div>
+    </div>
+    <div class="metric-card">
+      <div><div class="metric-val">CF</div><div class="metric-label">Certainty Factor Engine</div></div>
+      <div class="metric-icon">⚙</div>
+    </div>
+    <div class="metric-card">
+      <div><div class="metric-val">3</div><div class="metric-label">Priority Tiers + SLA</div></div>
+      <div class="metric-icon">⏱</div>
+    </div>
+    <div class="metric-card">
+      <div><div class="metric-val">8</div><div class="metric-label">Reasoning Steps</div></div>
+      <div class="metric-icon">🔍</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TECH STRIP ═══════════ -->
+<div class="tech-strip">
+  <div class="tech-item">Rule-Based AI</div>
+  <div class="tech-item">Natural Language Processing</div>
+  <div class="tech-item">MYCIN Certainty Factor Reasoning</div>
+  <div class="tech-item">Keyword Scoring Engine</div>
+  <div class="tech-item">Sentiment Detection</div>
+  <div class="tech-item">Entity Extraction</div>
+  <div class="tech-item">Automated Escalation Logic</div>
+  <div class="tech-item">SLA Assignment</div>
+  <div class="tech-item">Resolution Path Generation</div>
+</div>
+
+<!-- ═══════════ HOW IT WORKS ═══════════ -->
+<section class="section" id="how-it-works">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">System Architecture</div>
+      <div class="section-title">How the <em>AI Pipeline</em> Works</div>
+    </div>
+    <div class="section-subtitle">From raw text to explainable resolution in 8 reasoning steps</div>
+  </div>
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="pipe-num">01 — Input</div>
+      <div class="pipe-name">Text Preprocessing</div>
+      <div class="pipe-desc">The raw complaint text is lowercased, punctuation stripped, tokenised into words, and filtered of stop-words to isolate meaningful signal.</div>
+      <div class="pipe-tech">NLP · Tokenisation · Stop-word Removal</div>
+      <div class="pipe-arrow"></div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">02 — Classify</div>
+      <div class="pipe-name">Category Scoring</div>
+      <div class="pipe-desc">Each of the 6 categories is scored by counting keyword matches. Multi-word phrases receive double weight. Entities like Order IDs and amounts are extracted separately.</div>
+      <div class="pipe-tech">Keyword Matching · Entity Extraction · Phrase Scoring</div>
+      <div class="pipe-arrow"></div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">03 — Reason</div>
+      <div class="pipe-name">CF Combination</div>
+      <div class="pipe-desc">A base Certainty Factor is derived from the category score ratio. A rule-based CF is applied, then combined using the MYCIN formula: CF = CF₁ + CF₂ × (1 − CF₁).</div>
+      <div class="pipe-tech">MYCIN Formula · Sentiment Boost · Rule-Based CF</div>
+      <div class="pipe-arrow"></div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">04 — Resolve</div>
+      <div class="pipe-name">Decision &amp; Output</div>
+      <div class="pipe-desc">Priority and SLA are assigned based on category. Escalation is triggered by CF below 0.40, angry high-priority complaints, or high-priority with moderate confidence.</div>
+      <div class="pipe-tech">Priority Assignment · SLA · Escalation Logic</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CATEGORIES ═══════════ -->
+<section class="section" style="padding-top:0;border-top:none">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Knowledge Base</div>
+      <div class="section-title">The 6 <em>Complaint Categories</em></div>
+    </div>
+    <div class="section-subtitle">Each with dedicated keywords, priority, SLA, and resolution playbook</div>
+  </div>
+  <div class="categories-grid" id="cat-grid"></div>
+</section>
+
+<!-- ═══════════ ANALYSER ═══════════ -->
+<section id="analyser">
+  <div class="analyser-header">
+    <div class="analyser-title-group">
+      <div class="section-tag">Live Tool</div>
+      <div class="section-title">Complaint <em>Analyser</em></div>
+    </div>
+    <div class="analyser-actions">
+      <button class="btn btn-ghost" onclick="runDemo()">Next Demo Sample</button>
+      <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn btn-primary" id="analyse-btn" onclick="analyseComplaint()">Analyse →</button>
+    </div>
+  </div>
+  <div class="analyser-body">
+    <!-- LEFT -->
+    <div class="panel-l">
+      <div class="panel-label">Input — Complaint Text</div>
+      <textarea id="complaint-input"
+        placeholder="Describe the issue here. Be specific. E.g.: I was charged twice for my order ORD-7821. The amount Rs. 1500 was deducted twice and I need an immediate refund."
+        oninput="updateWordCount(this)"
+      ></textarea>
+      <div class="word-counter" id="word-counter">0 words</div>
+
+      <div class="panel-label">Sample Complaints</div>
+      <div class="samples-grid" id="samples-grid">
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Payment">
+          <div class="sample-cat">Payment</div>
+          <div>I was charged twice for order ORD-7821. Please refund Rs. 1500 immediately.</div>
+        </div>
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Technical">
+          <div class="sample-cat">Technical</div>
+          <div>The app keeps crashing every time I try to login. Very frustrated and angry!</div>
+        </div>
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Account">
+          <div class="sample-cat">Account</div>
+          <div>My account has been hacked and there are suspicious transactions I did not make.</div>
+        </div>
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Delivery">
+          <div class="sample-cat">Delivery</div>
+          <div>My delivery is 3 weeks late. Order ORD-984521 still shows pending status. Urgent!</div>
+        </div>
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Product">
+          <div class="sample-cat">Product</div>
+          <div>I received a completely damaged and wrong product in the box. Poor quality.</div>
+        </div>
+        <div class="sample-chip" onclick="loadSample(this)" data-cat="Enquiry">
+          <div class="sample-cat">Enquiry</div>
+          <div>Can you help explain how to reset my password? What are the steps?</div>
+        </div>
+      </div>
+    </div>
+    <!-- RIGHT -->
+    <div class="panel-r" id="panel-r">
+      <div class="panel-label">Output — Analysis Report</div>
+      <div class="state-empty" id="state-empty">
+        <div class="empty-glyph">◌</div>
+        <div class="empty-label">Submit a complaint to generate the AI report</div>
+      </div>
+      <div class="state-loading" id="state-loading" style="display:none">
+        <div class="spinner"></div>
+        <div class="loading-label">Processing complaint…</div>
+        <div class="loading-steps">
+          <span>→ Tokenising input</span>
+          <span>→ Scoring categories</span>
+          <span>→ Applying CF reasoning</span>
+        </div>
+      </div>
+      <div id="result-area" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ HISTORY ═══════════ -->
+<section id="history-section">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Session Log</div>
+      <div class="section-title">Complaint <em>History</em></div>
+    </div>
+    <button class="btn btn-ghost" onclick="clearHistory()">Clear History</button>
+  </div>
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Complaint (preview)</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>CF Score</th>
+        <th>Confidence</th>
+        <th>Escalation</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="history-tbody"></tbody>
+  </table>
+</section>
+
+<!-- ═══════════ STATS ═══════════ -->
+<section id="stats-section">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Analytics</div>
+      <div class="section-title">Session <em>Statistics</em></div>
+    </div>
+  </div>
+  <div class="stats-top" id="stats-top"></div>
+  <div class="stats-bottom">
+    <div>
+      <div class="section-tag" style="margin-bottom:1.5rem">Priority Distribution</div>
+      <div class="priority-bars" id="priority-bars"></div>
+    </div>
+    <div>
+      <div class="section-tag" style="margin-bottom:1.5rem">Category Breakdown</div>
+      <div class="cat-stats-list" id="cat-stats-list"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ABOUT ═══════════ -->
+<section class="about-section" id="about">
+  <div class="section-header" style="margin-bottom:3rem">
+    <div>
+      <div class="section-tag">Technical Documentation</div>
+      <div class="section-title">About This <em>System</em></div>
+    </div>
+  </div>
+  <div class="about-grid">
+    <div class="about-col">
+      <div class="about-col-title">The MYCIN CF Model</div>
+      <p>Originally developed for medical diagnosis, the Certainty Factor model allows a rule-based system to reason under uncertainty — combining multiple weak pieces of evidence into a confident conclusion.</p>
+      <p>CF values range from 0.0 (no confidence) to 1.0 (fully confident). The combination formula ensures that even imperfect evidence contributes meaningfully.</p>
+      <div class="formula-box">
+        <span class="formula-comment">// MYCIN Combination Formula</span><br>
+        CF(H,E₁,E₂) =<br>
+        &nbsp;&nbsp;CF₁ + CF₂ × (1 − CF₁)<br><br>
+        <span class="formula-comment">// Where:</span><br>
+        CF₁ = base keyword match score<br>
+        CF₂ = rule-based certainty factor
+      </div>
+    </div>
+    <div class="about-col">
+      <div class="about-col-title">NLP Pipeline</div>
+      <p>The system performs lightweight NLP: lowercasing, punctuation stripping, tokenisation, and stop-word removal. Keywords and multi-word phrases are then matched against the knowledge base.</p>
+      <p>Phrases score double (weight=2) vs single keywords (weight=1), ensuring "double charged" or "not delivered" carry more signal than generic words.</p>
+      <p>Entity extraction uses regular expressions to pull Order IDs, currency amounts, email addresses, and Indian mobile numbers from the complaint text.</p>
+    </div>
+    <div class="about-col">
+      <div class="about-col-title">Escalation Logic</div>
+      <p>Three conditions trigger human escalation. First, if the combined CF is below 0.40 — the system lacks sufficient confidence and needs human review. Second, if the sentiment is ANGRY and the priority is HIGH — empathy from a human agent is recommended. Third, if priority is HIGH but CF is below 0.60, an agent verifies before acting.</p>
+      <p>This three-tier logic ensures automated resolution for clear-cut cases while protecting customer experience in ambiguous or high-stakes situations.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="footer-brand">
+    Helpdesk Reasoner
+    <span>Intelligent Complaint Analysis System</span>
+  </div>
+  <div class="footer-links">
+    <a href="#how-it-works">Docs</a>
+    <a href="#analyser">Try It</a>
+    <a href="#stats-section">Stats</a>
+    <a href="#about">About</a>
+  </div>
+  <div class="footer-meta">
+    Rule-Based AI · NLP · MYCIN CF<br>
+    Python → JavaScript Port
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT ENGINE
+═══════════════════════════════════════════ -->
+<script>
+// ─── KNOWLEDGE BASE ───
+const CATEGORIES = {
+  "Payment Issue":{
+    keywords:["payment","charged","refund","billing","invoice","money","deducted","transaction","fee","overcharged","double charged","failed payment","card","amount"],
+    priority:"HIGH",icon:"💳",
+    kw_display:["payment","charged","refund","billing","transaction","fee","overcharged"]
+  },
+  "Technical Error":{
+    keywords:["error","not working","crash","bug","broken","fail","unable","cannot","login","password","otp","app","website","slow","freeze","blank","server","down"],
+    priority:"HIGH",icon:"⚙️",
+    kw_display:["error","crash","bug","login","password","app","server","freeze"]
+  },
+  "Account Issue":{
+    keywords:["account","locked","blocked","suspended","username","verify","hacked","unauthorized","access denied","reset","delete account","deactivate","profile"],
+    priority:"MEDIUM",icon:"🔐",
+    kw_display:["account","locked","hacked","unauthorized","suspended","reset","verify"]
+  },
+  "Delivery Delay":{
+    keywords:["delay","late","not delivered","shipment","order","delivery","tracking","pending","stuck","dispatch","lost","missing","where is my","not arrived"],
+    priority:"MEDIUM",icon:"📦",
+    kw_display:["delay","late","not delivered","tracking","pending","stuck","lost"]
+  },
+  "Product Quality":{
+    keywords:["damaged","broken","defective","wrong item","different","quality","replace","return","exchange","warranty","torn","scratched","missing parts","poor quality"],
+    priority:"MEDIUM",icon:"🔍",
+    kw_display:["damaged","defective","wrong item","replace","return","warranty","poor quality"]
+  },
+  "General Enquiry":{
+    keywords:["how","what","when","where","help","information","guide","steps","policy","terms","question","explain"],
+    priority:"LOW",icon:"💬",
+    kw_display:["how","what","help","guide","steps","policy","explain"]
+  }
+};
+const RESOLUTION_STEPS={
+  "Payment Issue":["Verify the transaction ID and purchase details from the system","Check if payment was debited from customer's account","Raise a refund/correction request in the billing system","Send confirmation email to customer with expected timeline","Follow up within 3–5 business days to confirm resolution"],
+  "Technical Error":["Collect details: device type, OS version, app version","Ask customer to clear cache and restart the application","Check server/system status from the admin dashboard","If login issue: send password reset link to registered email","If issue persists: escalate to the technical team with logs"],
+  "Account Issue":["Verify customer identity using registered email or phone","Check account status in the admin panel","If hacked: immediately freeze account and alert security team","If locked: unlock after successful identity verification","Send confirmation to customer once account is restored"],
+  "Delivery Delay":["Retrieve order number and check real-time tracking status","Contact the logistics/courier partner for update","Provide customer with expected delivery date","If significantly delayed: offer partial refund or priority re-dispatch","Close ticket only after customer confirms delivery"],
+  "Product Quality":["Ask customer to share photo/video evidence of the issue","Verify purchase date and check warranty period","Approve replacement order or full refund","Arrange free pickup of the defective product","Dispatch replacement within 2 business days"],
+  "General Enquiry":["Identify the exact topic the customer needs help with","Provide clear, step-by-step instructions","Share a help article or FAQ link if available","Confirm whether the response answered the query","Log query for FAQ update if asked frequently"]
+};
+const ESCALATION_TEAM={"Payment Issue":"Finance & Billing Department","Technical Error":"IT Support Team (Level 2)","Account Issue":"Account Security Team","Delivery Delay":"Logistics & Fulfilment Team","Product Quality":"Quality Assurance Team","General Enquiry":"Customer Support Team"};
+const SLA={HIGH:"Response within 2 hours",MEDIUM:"Response within 24 hours",LOW:"Response within 72 hours"};
+
+// ─── NLP ENGINE ───
+const STOP=new Set(["i","me","my","we","you","your","he","she","it","they","is","are","was","were","am","be","been","have","has","had","do","does","did","a","an","the","and","but","or","so","at","by","for","in","of","on","to","up","with","from","this","that","these","very","just","also","still","get","hi","hello","dear","sir","madam","please","kindly","thank"]);
+const clean=t=>t.toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+const scoreCategories=text=>{
+  const c=clean(text);
+  const tokens=c.split(' ').filter(w=>!STOP.has(w));
+  const scores={},kws={};
+  for(const[cat,d]of Object.entries(CATEGORIES)){
+    let s=0,hits=[];
+    for(const kw of d.keywords)if(c.includes(kw)){hits.push(kw);s+=kw.includes(' ')?2:1;}
+    scores[cat]=s;kws[cat]=hits;
+  }
+  return{scores,kws,tokens};
+};
+const extractEntities=text=>{
+  const f={};
+  const o=text.match(/\b(?:order|ord|ref)[:\-#]?\s*\d{4,12}\b/gi);if(o)f["Order ID"]=o;
+  const a=text.match(/(?:rs\.?|rupees?|inr|₹)\s*[\d,]+|\b\d+\s*rupees?\b/gi);if(a)f["Amount"]=a;
+  const e=text.match(/\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b/g);if(e)f["Email"]=e;
+  const p=text.match(/\b[6-9]\d{9}\b/g);if(p)f["Phone"]=p;
+  return f;
+};
+const detectSentiment=text=>{
+  const t=text.toLowerCase();
+  if(["angry","frustrated","ridiculous","unacceptable","worst","terrible","cheated","fraud","scam","horrible"].some(w=>t.includes(w)))return["ANGRY",0.05];
+  if(["urgent","immediately","asap","emergency","right now","cannot wait","critical","serious"].some(w=>t.includes(w)))return["URGENT",0.03];
+  return["NEUTRAL",0.0];
+};
+const calcCF=(s,m)=>m?+Math.min(s/m,1).toFixed(2):0;
+const combineCF=(a,b)=>+((a+b*(1-a)).toFixed(2));
+const cfLabel=cf=>cf>=0.85?"VERY HIGH":cf>=0.65?"HIGH":cf>=0.45?"MODERATE":cf>=0.25?"LOW":"VERY LOW";
+const escalation=(cf,pri,sent)=>{
+  if(cf<0.40)return[true,"Low confidence — system is unsure, human review needed"];
+  if(sent==="ANGRY"&&pri==="HIGH")return[true,"Angry customer with high-priority issue — human empathy needed"];
+  if(pri==="HIGH"&&cf<0.60)return[true,"High-priority but moderate confidence — verify with agent"];
+  return[false,"Automated resolution is sufficient"];
+};
+
+function analyse(complaint){
+  const{scores,kws,tokens}=scoreCategories(complaint);
+  const entities=extractEntities(complaint);
+  const[sent,boost]=detectSentiment(complaint);
+  const maxScore=Math.max(...Object.values(scores));
+  let cat="General Enquiry",baseCF=0.20;
+  if(maxScore>0){
+    cat=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+    baseCF=calcCF(scores[cat],maxScore);
+  }
+  const ruleCF=scores[cat]>=3?0.85:scores[cat]>=1?0.65:0.30;
+  const combined=+Math.min((combineCF(baseCF,ruleCF)+boost).toFixed(2),1.0);
+  const pri=CATEGORIES[cat].priority;
+  const[esc,escReason]=escalation(combined,pri,sent);
+  return{
+    complaint,wordCount:complaint.trim().split(/\s+/).length,
+    cat,icon:CATEGORIES[cat].icon,pri,sent,
+    allScores:scores,matchedKws:kws[cat],
+    baseCF,ruleCF,combined,confidence:cfLabel(combined),
+    steps:RESOLUTION_STEPS[cat],escalateTo:ESCALATION_TEAM[cat],
+    sla:SLA[pri],esc,escReason,entities
+  };
+}
+
+// ─── SESSION ───
+let log=[];
+
+// ─── RENDER CATEGORIES GRID ───
+(function renderCatGrid(){
+  const g=document.getElementById('cat-grid');
+  for(const[name,d]of Object.entries(CATEGORIES)){
+    g.innerHTML+=`<div class="cat-card">
+      <div class="cat-card-icon">${d.icon}</div>
+      <div class="cat-card-name">${name}</div>
+      <div><span class="cat-card-priority priority-${d.priority}">${d.priority}</span></div>
+      <div class="cat-card-sla">${SLA[d.priority]}</div>
+      <div class="cat-card-kws">${d.kw_display.join(' · ')}</div>
+    </div>`;
+  }
+})();
+
+// ─── UI HELPERS ───
+function scrollToAnalyser(){document.getElementById('analyser').scrollIntoView({behavior:'smooth'})}
+function updateWordCount(ta){
+  const w=ta.value.trim()?ta.value.trim().split(/\s+/).length:0;
+  document.getElementById('word-counter').textContent=w+' word'+(w===1?'':'s');
+}
+function loadSample(el){
+  const text=el.querySelector('div:last-child').textContent.trim();
+  document.getElementById('complaint-input').value=text;
+  updateWordCount(document.getElementById('complaint-input'));
+}
+function clearAll(){
+  document.getElementById('complaint-input').value='';
+  document.getElementById('word-counter').textContent='0 words';
+  document.getElementById('state-empty').style.display='flex';
+  document.getElementById('state-loading').style.display='none';
+  document.getElementById('result-area').style.display='none';
+}
+function clearHistory(){
+  log=[];
+  document.getElementById('history-section').classList.remove('visible');
+  document.getElementById('stats-section').classList.remove('visible');
+  document.getElementById('history-tbody').innerHTML='';
+}
+
+function showLoading(){
+  document.getElementById('state-empty').style.display='none';
+  document.getElementById('state-loading').style.display='flex';
+  document.getElementById('result-area').style.display='none';
+}
+function showResult(r){
+  document.getElementById('state-empty').style.display='none';
+  document.getElementById('state-loading').style.display='none';
+  const ra=document.getElementById('result-area');
+  ra.style.display='block';
+  ra.innerHTML=renderResult(r);
+  setTimeout(()=>{
+    const max=Math.max(...Object.values(r.allScores));
+    document.querySelectorAll('[data-score]').forEach(b=>{
+      const s=+b.dataset.score;
+      b.style.width=(max>0?(s/max*100):0)+'%';
+    });
+  },100);
+}
+
+function renderResult(r){
+  const sorted=Object.entries(r.allScores).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(...Object.values(r.allScores));
+
+  const scoresHtml=sorted.map(([cat,score])=>{
+    const cf=calcCF(score,max);
+    const win=cat===r.cat;
+    return`<div class="cf-row">
+      <div class="cf-name${win?' winner':''}">${cat}</div>
+      <div class="cf-track"><div class="cf-fill${win?' winner':''}" data-score="${score}"></div></div>
+      <div class="cf-num${win?' winner':''}">${cf.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+
+  const kwHtml=r.matchedKws.length
+    ?`<div class="kw-cloud">${r.matchedKws.map(k=>`<span class="kw-tag">${k}</span>`).join('')}</div>`
+    :`<div style="padding:1rem 1.2rem;font-size:0.8rem;color:var(--dim)">No specific keywords matched.</div>`;
+
+  const entHtml=Object.entries(r.entities).map(([k,v])=>
+    `<div class="r-meta-item"><div class="r-meta-key">${k}</div><div class="r-meta-val">${v.join(', ')}</div></div>`
+  ).join('');
+
+  const chainItems=[
+    `Complaint received — ${r.wordCount} word${r.wordCount===1?'':'s'} analysed.`,
+    `NLP tokenisation complete. Keywords matched category: <strong>${r.cat}</strong>`,
+    `Base CF calculated: score=${r.allScores[r.cat]}, max=${Math.max(...Object.values(r.allScores))}, baseCF = <strong>${r.baseCF.toFixed(2)}</strong>`,
+    `Rule-based CF applied: score≥3 → 0.85, score≥1 → 0.65, else → 0.30. RuleCF = <strong>${r.ruleCF.toFixed(2)}</strong>`,
+    `MYCIN formula: ${r.baseCF} + ${r.ruleCF} × (1 − ${r.baseCF}) = <strong>${combineCF(r.baseCF,r.ruleCF).toFixed(2)}</strong>`,
+    `Sentiment detected: <strong>${r.sent}</strong>${r.sent!=='NEUTRAL'?' → CF boosted':''}`,
+    `Final Combined CF = <strong>${r.combined.toFixed(2)}</strong> → ${r.confidence} CONFIDENCE`,
+    `Priority: <strong>${r.pri}</strong> — SLA: ${r.sla}`,
+    `Escalation decision: <strong>${r.esc?'YES — Human Agent Required':'NO — Automated Resolution'}</strong>`
+  ];
+
+  const escalHtml=r.esc
+    ?`<div class="r-escalation"><div class="r-esc-head">⚠ Escalation Required</div><div class="r-esc-body">${r.escReason}<br><br>Assign immediately to: <strong>${r.escalateTo}</strong></div></div>`
+    :`<div class="r-resolved">✓ &nbsp;Automated Resolution Sufficient — No Escalation Needed &nbsp;|&nbsp; ${r.escalateTo} on standby</div>`;
+
+  return`<div class="result">
+    <div class="r-category">
+      <div class="r-cat-left">
+        <div class="r-cat-eyebrow">Classified Category</div>
+        <div class="r-cat-name">${r.icon} ${r.cat}</div>
+        <div class="r-cat-sla">${r.sla}</div>
+      </div>
+      <div class="r-cat-right">
+        <div class="r-priority">${r.pri}</div>
+        <div class="r-cf-big">${r.combined.toFixed(2)}</div>
+        <div class="r-cf-label">Combined CF</div>
+      </div>
+    </div>
+
+    <div class="r-block">
+      <div class="r-block-head"><span>CF Scores — All Categories</span><span>MYCIN Certainty Factor</span></div>
+      <div class="r-block-body"><div class="cf-rows">${scoresHtml}</div></div>
+    </div>
+
+    <div class="r-meta">
+      <div class="r-meta-item"><div class="r-meta-key">Confidence Level</div><div class="r-meta-val">${r.confidence}</div></div>
+      <div class="r-meta-item"><div class="r-meta-key">Sentiment</div><div class="r-meta-val">${r.sent}</div></div>
+      <div class="r-meta-item"><div class="r-meta-key">Escalate To</div><div class="r-meta-val">${r.escalateTo}</div></div>
+      <div class="r-meta-item"><div class="r-meta-key">Word Count</div><div class="r-meta-val">${r.wordCount} words</div></div>
+      ${entHtml}
+    </div>
+
+    <div class="r-block">
+      <div class="r-block-head"><span>Matched Keywords</span><span>${r.matchedKws.length} matches</span></div>
+      ${kwHtml}
+    </div>
+
+    <div class="r-block">
+      <div class="r-block-head"><span>Reasoning Chain</span><span>9 Steps</span></div>
+      <div class="chain-steps">
+        ${chainItems.map((s,i)=>`<div class="chain-step"><div class="chain-n">${String(i+1).padStart(2,'0')}</div><div class="chain-t">${s}</div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="r-block">
+      <div class="r-block-head"><span>Resolution Path</span><span>${r.cat}</span></div>
+      <ul class="res-list">
+        ${r.steps.map(s=>`<li class="res-item"><span class="res-arrow">→</span><span class="res-text">${s}</span></li>`).join('')}
+      </ul>
+    </div>
+
+    ${escalHtml}
+  </div>`;
+}
+
+// ─── MAIN ANALYSE ───
+async function analyseComplaint(){
+  const text=document.getElementById('complaint-input').value.trim();
+  if(!text){alert('Please enter a complaint first.');return;}
+  const btn=document.getElementById('analyse-btn');
+  btn.disabled=true;
+  showLoading();
+  await new Promise(r=>setTimeout(r,700));
+  const r=analyse(text);
+  log.push({...r,time:new Date()});
+  showResult(r);
+  updateHistory();
+  updateStats();
+  btn.disabled=false;
+  document.getElementById('result-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─── DEMO ───
+const DEMOS=[
+  "I was charged twice for order ORD-7821. Please refund Rs. 1500 immediately.",
+  "The app keeps crashing every time I try to login. Very frustrated and angry!",
+  "My account has been hacked and there are suspicious transactions I did not make.",
+  "My delivery is 3 weeks late. Order ORD-984521 still shows pending status. Urgent!",
+  "I received a completely damaged and wrong product in the box. Poor quality packaging.",
+  "Can you help explain how to reset my password? What are the steps?"
+];
+let demoIdx=0;
+async function runDemo(){
+  if(demoIdx>=DEMOS.length)demoIdx=0;
+  document.getElementById('complaint-input').value=DEMOS[demoIdx++];
+  updateWordCount(document.getElementById('complaint-input'));
+  scrollToAnalyser();
+  setTimeout(analyseComplaint,300);
+}
+async function runAllDemo(){
+  demoIdx=0;
+  scrollToAnalyser();
+  for(let i=0;i<DEMOS.length;i++){
+    await new Promise(r=>setTimeout(r,200));
+    document.getElementById('complaint-input').value=DEMOS[demoIdx++];
+    updateWordCount(document.getElementById('complaint-input'));
+    await analyseComplaint();
+    await new Promise(r=>setTimeout(r,400));
+  }
+}
+
+// ─── HISTORY ───
+function updateHistory(){
+  document.getElementById('history-section').classList.add('visible');
+  const tb=document.getElementById('history-tbody');
+  tb.innerHTML='';
+  [...log].reverse().forEach((r,i)=>{
+    const idx=log.length-i;
+    const t=r.time;
+    const timeStr=`${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}:${t.getSeconds().toString().padStart(2,'0')}`;
+    tb.innerHTML+=`<tr>
+      <td><span class="h-time">${idx}</span></td>
+      <td><span class="h-complaint">${r.complaint}</span></td>
+      <td class="h-category">${r.icon} ${r.cat}</td>
+      <td><span class="h-pri priority-${r.pri}">${r.pri}</span></td>
+      <td class="h-cf">${r.combined.toFixed(2)}</td>
+      <td class="h-cf">${r.confidence}</td>
+      <td class="h-esc${r.esc?' yes':''}">${r.esc?'⚠ YES':'✓ NO'}</td>
+      <td class="h-time">${timeStr}</td>
+    </tr>`;
+  });
+}
+
+// ─── STATS ───
+function updateStats(){
+  document.getElementById('stats-section').classList.add('visible');
+  const n=log.length;
+  const avgCF=(log.reduce((s,r)=>s+r.combined,0)/n).toFixed(2);
+  const esc=log.filter(r=>r.esc).length;
+  const auto=n-esc;
+  const highConf=log.filter(r=>r.combined>=0.65).length;
+
+  document.getElementById('stats-top').innerHTML=`
+    <div class="stat-tile"><div class="st-num">${n}</div><div class="st-label">Complaints Analysed</div></div>
+    <div class="stat-tile"><div class="st-num">${avgCF}</div><div class="st-label">Average CF Score</div></div>
+    <div class="stat-tile"><div class="st-num">${esc}</div><div class="st-label">Escalated Cases</div></div>
+    <div class="stat-tile"><div class="st-num">${auto}</div><div class="st-label">Auto-Resolved</div></div>
+    <div class="stat-tile"><div class="st-num">${highConf}</div><div class="st-label">High Confidence</div></div>
+  `;
+
+  const byPri={HIGH:0,MEDIUM:0,LOW:0};
+  log.forEach(r=>byPri[r.pri]++);
+  document.getElementById('priority-bars').innerHTML=
+    ['HIGH','MEDIUM','LOW'].map(p=>`
+      <div class="pb-row">
+        <div class="pb-label">${p}</div>
+        <div class="pb-track"><div class="pb-fill${p==='MEDIUM'?' med':p==='LOW'?' low':''}" style="width:${n?byPri[p]/n*100:0}%"></div></div>
+        <div class="pb-count">${byPri[p]}</div>
+      </div>`).join('');
+
+  const byCat={};
+  log.forEach(r=>{byCat[r.cat]=(byCat[r.cat]||0)+1;});
+  document.getElementById('cat-stats-list').innerHTML=
+    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cat,count])=>
+      `<div class="cs-row">
+        <span class="cs-name">${CATEGORIES[cat].icon} ${cat}</span>
+        <span class="cs-count">${count} complaint${count>1?'s':''}</span>
+      </div>`).join('');
+}
+</script>
+</body>
+</html>
